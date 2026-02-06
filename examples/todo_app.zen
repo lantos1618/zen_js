@@ -1,33 +1,30 @@
 // Todo App in Zen → transpiles to JavaScript
-// Shows: enums, pattern matching, functions, string interpolation
+// Shows: enums, pattern matching, multi-function composition
 
 { io } = @std
 
 Priority: Low, Medium, High
 
-priority_label = (p: Priority) String {
+label = (p: Priority) String {
     p ?
-        | .Low { return "low" }
+        | .Low    { return "low" }
         | .Medium { return "med" }
-        | .High { return "HIGH" }
+        | .High   { return "HIGH" }
 }
 
-format_todo = (id: i32, text: String, done: bool, priority: Priority) String {
-    status = done ?
-        | true { "[x]" }
-        | false { "[ ]" }
-    return "${status} #${id} [${priority_label(priority)}] ${text}"
+format = (id: i32, text: String, done: bool, pri: Priority) String {
+    check = done ? | true { "x" } | false { " " }
+    return "[${check}] #${id} [${label(pri)}] ${text}"
 }
 
 main = () i32 {
-    io.println("=== Zen Todo App ===")
+    io.println("=== Todo ===")
+    io.println(format(1, "Write compiler",     true,  .High))
+    io.println(format(2, "Add meta-programming", true,  .High))
+    io.println(format(3, "Build JS transpiler", false, .Medium))
+    io.println(format(4, "Write docs",         false, .Low))
+    io.println(format(5, "Ship it",            false, .High))
     io.println("")
-    io.println(format_todo(1, "Write Zen compiler",   true,  .High))
-    io.println(format_todo(2, "Add meta-programming", true,  .High))
-    io.println(format_todo(3, "Build JS transpiler",  false, .Medium))
-    io.println(format_todo(4, "Write documentation",  false, .Low))
-    io.println(format_todo(5, "Celebrate",            false, .High))
-    io.println("")
-    io.println("Progress: 2/5 tasks complete")
+    io.println("2/5 complete")
     return 0
 }

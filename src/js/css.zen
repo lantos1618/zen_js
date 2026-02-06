@@ -1,0 +1,40 @@
+// CSS types for Zen → JavaScript
+
+CSSStyleDeclaration: {
+    color: String,
+    backgroundColor: String,
+    fontSize: String,
+    fontWeight: String,
+    fontFamily: String,
+    margin: String,
+    padding: String,
+    border: String,
+    borderRadius: String,
+    width: String,
+    height: String,
+    display: String,
+    position: String,
+    top: String,
+    left: String,
+    right: String,
+    bottom: String,
+    opacity: String,
+    transform: String,
+    transition: String,
+    zIndex: String,
+    overflow: String,
+    cursor: String,
+    textAlign: String,
+    lineHeight: String,
+    boxShadow: String,
+    flexDirection: String,
+    justifyContent: String,
+    alignItems: String,
+    gap: String,
+    gridTemplateColumns: String,
+    gridTemplateRows: String,
+}
+
+DOMTokenList: {
+    length: i32,
+}

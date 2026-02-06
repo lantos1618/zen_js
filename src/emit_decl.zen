@@ -1,0 +1,74 @@
+// Declaration emitters: program, function, struct, enum
+
+{ meta } = @std
+
+emit_program = (node: meta.ASTNode) String {
+    result ::= ""
+
+    structs = node.structs()
+    i ::= 0
+    loop i < structs.len() {
+        result = result + to_js(structs.at(i)) + "\n\n"
+        i = i + 1
+    }
+
+    enums = node.enums()
+    j ::= 0
+    loop j < enums.len() {
+        result = result + to_js(enums.at(j)) + "\n\n"
+        j = j + 1
+    }
+
+    funcs = node.functions()
+    k ::= 0
+    loop k < funcs.len() {
+        result = result + to_js(funcs.at(k)) + "\n\n"
+        k = k + 1
+    }
+
+    // Auto-call main
+    node.find_function("main") ?
+        | null {}
+        | _    { result = result + "main();\n" }
+
+    return result
+}
+
+emit_function = (node: meta.ASTNode) String {
+    params = emit_joined(node.args, ", ")
+    body = emit_body(node.body, "  ")
+    return "function ${node.name}(${params}) {\n${body}}"
+}
+
+emit_struct = (node: meta.ASTNode) String {
+    fields = node.fields
+    params = emit_joined(fields, ", ")
+
+    ctor_body ::= ""
+    i ::= 0
+    loop i < fields.len() {
+        fname = fields.at(i).name
+        ctor_body = ctor_body + "    this.${fname} = ${fname};\n"
+        i = i + 1
+    }
+
+    return "class ${node.name} {\n  constructor(${params}) {\n${ctor_body}  }\n}"
+}
+
+emit_enum = (node: meta.ASTNode) String {
+    result ::= "const ${node.name} = Object.freeze({\n"
+    variants = node.variants
+    i ::= 0
+    loop i < variants.len() {
+        v = variants.at(i)
+        v.payload ?
+            | null {
+                result = result + "  ${v.name}: Object.freeze({ tag: \"${v.name}\" }),\n"
+            }
+            | _ {
+                result = result + "  ${v.name}: (value) => Object.freeze({ tag: \"${v.name}\", value }),\n"
+            }
+        i = i + 1
+    }
+    return result + "});"
+}

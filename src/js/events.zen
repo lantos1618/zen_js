@@ -1,0 +1,60 @@
+// DOM event types for Zen → JavaScript
+
+Event: {
+    eventType: String,
+    bubbles: bool,
+    cancelable: bool,
+    defaultPrevented: bool,
+    timeStamp: f64,
+}
+
+MouseEvent: {
+    eventType: String,
+    clientX: f64,
+    clientY: f64,
+    pageX: f64,
+    pageY: f64,
+    button: i32,
+    altKey: bool,
+    ctrlKey: bool,
+    metaKey: bool,
+    shiftKey: bool,
+}
+
+KeyboardEvent: {
+    eventType: String,
+    key: String,
+    code: String,
+    altKey: bool,
+    ctrlKey: bool,
+    metaKey: bool,
+    shiftKey: bool,
+    repeat: bool,
+}
+
+InputEvent: {
+    eventType: String,
+    data: String,
+    inputType: String,
+    isComposing: bool,
+}
+
+WheelEvent: {
+    eventType: String,
+    deltaX: f64,
+    deltaY: f64,
+    deltaZ: f64,
+    deltaMode: i32,
+}
+
+FocusEvent: {
+    eventType: String,
+}
+
+TouchEvent: {
+    eventType: String,
+    altKey: bool,
+    ctrlKey: bool,
+    metaKey: bool,
+    shiftKey: bool,
+}

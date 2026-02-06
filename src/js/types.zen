@@ -1,0 +1,24 @@
+// Core JavaScript types for Zen
+//
+// Primitive mappings:
+//   JS number  → f64
+//   JS bigint  → i64
+//   JS boolean → bool
+//   JS string  → String
+//   JS null    → None
+
+JsValue: Undefined, Null, Boolean, Number, BigInt, Str, Object, Array, Function
+
+JsError: {
+    message: String,
+    name: String,
+    stack: String,
+}
+
+TypeError: {
+    message: String,
+}
+
+RangeError: {
+    message: String,
+}

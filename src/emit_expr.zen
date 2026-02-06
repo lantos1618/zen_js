@@ -1,0 +1,80 @@
+// Expression emitters: binary ops, calls, match, closures, blocks
+
+{ meta } = @std
+
+emit_binary_op = (node: meta.ASTNode) String {
+    left = to_js(node.left)
+    right = to_js(node.right)
+    op = node.op ?
+        | "==" { "===" }
+        | "!=" { "!==" }
+        | _    { node.op }
+    return "(${left} ${op} ${right})"
+}
+
+emit_call = (node: meta.ASTNode) String {
+    args_str = emit_args(node.args)
+
+    // Map Zen stdlib → JS builtins
+    node.name ?
+        | "io.println" { return "console.log(${args_str})" }
+        | "io.print"   { return "process.stdout.write(${args_str})" }
+        | "cast"       { return args_str }
+        | _            { return "${node.name}(${args_str})" }
+}
+
+emit_method_call = (node: meta.ASTNode) String {
+    obj = to_js(node.object)
+    args_str = emit_args(node.args)
+    return "${obj}.${node.method}(${args_str})"
+}
+
+emit_template_literal = (node: meta.ASTNode) String {
+    result ::= "`"
+    parts = node.parts
+    i ::= 0
+    loop i < parts.len() {
+        part = parts.at(i)
+        part.variant_name() ?
+            | "Literal"       { result = result + part.value }
+            | "Interpolation" { result = result + "${" + to_js(part.expr) + "}" }
+        i = i + 1
+    }
+    return result + "`"
+}
+
+emit_match = (node: meta.ASTNode) String {
+    scrutinee = to_js(node.scrutinee)
+    result ::= "((__m) => {\n"
+    arms = node.arms
+    i ::= 0
+    loop i < arms.len() {
+        arm = arms.at(i)
+        cond = emit_pattern_cond("__m", arm.pattern)
+        body = to_js(arm.body)
+        i == 0 ?
+            | true  { result = result + "  if (${cond}) { return ${body}; }\n" }
+            | false { result = result + "  else if (${cond}) { return ${body}; }\n" }
+        i = i + 1
+    }
+    return result + "})(${scrutinee})"
+}
+
+emit_pattern_cond = (var: String, pattern: meta.ASTNode) String {
+    pattern.variant_name() ?
+        | "Wildcard"    { return "true" }
+        | "Literal"     { return "${var} === ${to_js(pattern.value)}" }
+        | "Identifier"  { return "true" }
+        | "EnumLiteral" { return "${var}.tag === \"${pattern.variant}\"" }
+        | _             { return "true" }
+}
+
+emit_closure = (node: meta.ASTNode) String {
+    params = emit_joined(node.params, ", ")
+    return "(${params}) => ${to_js(node.body)}"
+}
+
+emit_block = (node: meta.ASTNode) String {
+    body = emit_body(node.statements, "  ")
+    return "(() => {\n${body}})()"
+}

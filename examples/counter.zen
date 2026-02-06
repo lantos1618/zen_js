@@ -1,36 +1,31 @@
-// Counter app in Zen → transpiles to JavaScript
-// Shows: enums, pattern matching, mutable variables, string interpolation
+// Counter in Zen → transpiles to JavaScript
+// Shows: enums, pattern matching, mutable variables
 
 { io } = @std
 
 Action: Increment, Decrement, Reset
 
-apply_action = (count: i32, action: Action) i32 {
+apply = (count: i32, action: Action) i32 {
     action ?
         | .Increment { return count + 1 }
         | .Decrement { return count - 1 }
-        | .Reset { return 0 }
+        | .Reset     { return 0 }
 }
 
 main = () i32 {
-    count ::= 0
+    c ::= 0
+    io.println("start:     ${c}")
 
-    io.println("Counter: ${count}")
+    c = apply(c, .Increment)
+    c = apply(c, .Increment)
+    c = apply(c, .Increment)
+    io.println("+3:        ${c}")
 
-    count = apply_action(count, .Increment)
-    io.println("After increment: ${count}")
+    c = apply(c, .Decrement)
+    io.println("-1:        ${c}")
 
-    count = apply_action(count, .Increment)
-    io.println("After increment: ${count}")
-
-    count = apply_action(count, .Increment)
-    io.println("After increment: ${count}")
-
-    count = apply_action(count, .Decrement)
-    io.println("After decrement: ${count}")
-
-    count = apply_action(count, .Reset)
-    io.println("After reset: ${count}")
+    c = apply(c, .Reset)
+    io.println("reset:     ${c}")
 
     return 0
 }

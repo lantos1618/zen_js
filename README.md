@@ -2,46 +2,52 @@
 
 Zen to JavaScript transpiler — written in Zen using compile-time AST introspection.
 
-The transpiler walks the Zen AST at comptime and emits JavaScript. No external tooling, no Rust glue — just Zen meta-programming.
-
-## How it works
+`meta.parse()` gives full AST access at compile time. The transpiler pattern-matches on node types and emits JavaScript.
 
 ```zen
-to_js = comptime (source: String) String {
-    ast = meta.parse(source)
-    output ::= ""
-    nodes = ast.children()
-    // walk AST nodes, emit JS for each
+to_js = (node: meta.ASTNode) String {
+    node.variant_name() ?
+        | "Function"   { return emit_function(node) }
+        | "Struct"     { return emit_struct(node) }
+        | "Enum"       { return emit_enum(node) }
+        | "BinaryOp"   { return emit_binary_op(node) }
+        | "Identifier"  { return node.name }
+        | ...
 }
 ```
 
-Zen's `comptime` + `meta.parse()` gives full AST access at compile time. The transpiler pattern-matches on AST node types and emits the corresponding JavaScript.
-
-## Zen → JavaScript mapping
+## Zen → JS mapping
 
 | Zen | JavaScript |
 |---|---|
-| `Name: { x: i32, y: f64 }` | `class Name { constructor(x, y) { ... } }` |
-| `Color: Red, Green, Blue` | `const Color = Object.freeze({ Red: ..., ... })` |
+| `Point: { x: f64, y: f64 }` | `class Point { constructor(x, y) { ... } }` |
+| `Color: Red, Green, Blue` | `const Color = Object.freeze({ ... })` |
 | `x ? \| .Red { "r" } \| .Blue { "b" }` | if/else chain |
 | `io.println("hi")` | `console.log("hi")` |
 | `"Hello ${name}"` | `` `Hello ${name}` `` |
 | `count ::= 0` | `let count = 0` |
 | `x = 5` | `const x = 5` |
 
-## Project structure
+## Structure
 
 ```
 src/
-  to_js.zen       # The transpiler — walks AST, emits JS
-  js_types.zen    # Core JS type definitions (JsValue, Promise, Error, ...)
-  js_dom.zen      # DOM API types (HTMLElement, Document, Event, Canvas, ...)
+  to_js.zen        # Main walker — dispatches AST nodes
+  emit_decl.zen    # Declaration emitters (program, function, struct, enum)
+  emit_expr.zen    # Expression emitters (binary ops, calls, match, closures)
+  emit_stmt.zen    # Statement emitters + shared helpers
+  js/
+    types.zen      # Core JS types (JsValue, errors)
+    dom.zen        # DOM elements (HTMLElement, HTMLInputElement, ...)
+    events.zen     # Event types (MouseEvent, KeyboardEvent, ...)
+    css.zen        # CSS types (CSSStyleDeclaration)
+    apis.zen       # Browser APIs (Document, Window, Fetch, Canvas, WebSocket)
 examples/
-  hello.zen       # Hello world
-  fibonacci.zen   # Recursion + pattern matching
-  counter.zen     # Enums + mutable state
-  todo_app.zen    # Multi-function composition
-  fetch_api.zen   # Structs + string interpolation
+  hello.zen        # Hello world
+  fibonacci.zen    # Recursion + loops
+  counter.zen      # Enums + mutable state
+  todo_app.zen     # Multi-function composition
+  fetch_api.zen    # Structs + struct literals
 ```
 
 ## Examples
@@ -58,69 +64,34 @@ fibonacci = (n: i32) i32 {
 }
 
 main = () i32 {
-    io.println("fib(10) = ${fibonacci(10)}")
+    io.println("Fibonacci sequence:")
+    i ::= 0
+    loop i <= 10 {
+        io.println("  fib(${i}) = ${fibonacci(i)}")
+        i = i + 1
+    }
     return 0
 }
 ```
 
-### counter.zen (enums + pattern matching)
+### counter.zen
 
 ```zen
 { io } = @std
 
 Action: Increment, Decrement, Reset
 
-apply_action = (count: i32, action: Action) i32 {
+apply = (count: i32, action: Action) i32 {
     action ?
         | .Increment { return count + 1 }
         | .Decrement { return count - 1 }
-        | .Reset { return 0 }
-}
-
-main = () i32 {
-    count ::= 0
-    count = apply_action(count, .Increment)
-    io.println("After increment: ${count}")
-    return 0
+        | .Reset     { return 0 }
 }
 ```
-
-### todo_app.zen (multi-function composition)
-
-```zen
-{ io } = @std
-
-Priority: Low, Medium, High
-
-priority_label = (p: Priority) String {
-    p ?
-        | .Low { return "low" }
-        | .Medium { return "med" }
-        | .High { return "HIGH" }
-}
-
-format_todo = (id: i32, text: String, done: bool, priority: Priority) String {
-    status = done ?
-        | true { "[x]" }
-        | false { "[ ]" }
-    return "${status} #${id} [${priority_label(priority)}] ${text}"
-}
-```
-
-## JS DOM Type Definitions
-
-`src/` includes Zen type definitions for browser APIs:
-
-- **`js_types.zen`** — Core JS types: `JsValue`, `Promise`, `Map`, `Set`
-- **`js_dom.zen`** — Full DOM API: `HTMLElement`, `Document`, `Event`, `Window`, `CSSStyleDeclaration`, Canvas, Fetch, WebSocket
 
 ## Requirements
 
-Requires the [Zen compiler](https://github.com/lantos1618/zenlang):
-
-```bash
-zen run src/to_js.zen -- examples/fibonacci.zen
-```
+[Zen compiler](https://github.com/lantos1618/zenlang)
 
 ## License
 

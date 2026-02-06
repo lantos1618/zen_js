@@ -1,327 +1,41 @@
-// to_js.zen - JavaScript code generator written in Zen
-// This is the SPECIFICATION for the Zen-native walker.
-// Currently the Rust emitter implements this logic; this file shows
-// how it will look when Zen's comptime system is complete enough
-// to self-host code generation.
+// to_js.zen - Zen → JavaScript transpiler
+// Written in Zen using compile-time AST introspection.
 //
-// Usage (future):
+// Usage:
 //   { meta } = @std
-//   source = read_file("my_app.zen")
-//   ast = meta.parse(source)
-//   js_code = to_js(ast)
-//   write_file("my_app.js", js_code)
+//   ast = meta.parse(read_file("app.zen"))
+//   js = emit_program(ast)
 
 { meta } = @std
 
-// Walk an AST node and emit JavaScript
+// Walk an AST node and dispatch to the appropriate emitter
 to_js = (node: meta.ASTNode) String {
-    variant = node.variant_name()
-    variant ?
-        | "Program"    { return emit_program(node) }
-        | "Function"   { return emit_function(node) }
-        | "Struct"     { return emit_struct(node) }
-        | "Enum"       { return emit_enum(node) }
-        | "Integer32"  { return "${node.value}" }
-        | "Integer64"  { return "${node.value}n" }
-        | "Float32"    { return "${node.value}" }
-        | "Float64"    { return "${node.value}" }
-        | "Boolean"    { return node.value ? | true { "true" } | false { "false" } }
-        | "String"     { return "\"${node.value}\"" }
-        | "Identifier" { return node.name }
-        | "BinaryOp"   { return emit_binary_op(node) }
-        | "FunctionCall" { return emit_call(node) }
-        | "MethodCall" { return emit_method_call(node) }
-        | "MemberAccess" { return emit_member_access(node) }
-        | "ArrayLiteral" { return emit_array(node) }
-        | "ArrayIndex" { return emit_array_index(node) }
-        | "StructLiteral" { return emit_struct_literal(node) }
-        | "StringInterpolation" { return emit_template_literal(node) }
-        | "QuestionMatch" { return emit_match(node) }
-        | "Closure"    { return emit_closure(node) }
-        | "Block"      { return emit_block(node) }
-        | "Return"     { return "return " + to_js(node.expr) }
-        | "None"       { return "null" }
-        | "Some"       { return to_js(node.inner) }
-        | _            { return "/* unsupported: ${variant} */" }
-}
-
-// === Program ===
-emit_program = (node: meta.ASTNode) String {
-    result ::= ""
-    funcs = node.functions()
-    i ::= 0
-    loop i < funcs.len() {
-        result = result + to_js(funcs.at(i)) + "\n\n"
-        i = i + 1
-    }
-
-    structs = node.structs()
-    j ::= 0
-    loop j < structs.len() {
-        result = result + to_js(structs.at(j)) + "\n\n"
-        j = j + 1
-    }
-
-    enums = node.enums()
-    k ::= 0
-    loop k < enums.len() {
-        result = result + to_js(enums.at(k)) + "\n\n"
-        k = k + 1
-    }
-
-    // Auto-call main if present
-    node.find_function("main") ?
-        | null {}
-        | _ { result = result + "main();\n" }
-
-    return result
-}
-
-// === Function ===
-emit_function = (node: meta.ASTNode) String {
-    args = node.args
-    params ::= ""
-    i ::= 0
-    loop i < args.len() {
-        i > 0 ? | true { params = params + ", " } | false {}
-        params = params + args.at(i).name
-        i = i + 1
-    }
-
-    body ::= ""
-    stmts = node.body
-    j ::= 0
-    loop j < stmts.len() {
-        body = body + "  " + emit_statement(stmts.at(j)) + "\n"
-        j = j + 1
-    }
-
-    return "function ${node.name}(${params}) {\n${body}}"
-}
-
-// === Struct → Class ===
-emit_struct = (node: meta.ASTNode) String {
-    fields = node.fields
-    params ::= ""
-    ctor_body ::= ""
-    i ::= 0
-    loop i < fields.len() {
-        i > 0 ? | true { params = params + ", " } | false {}
-        fname = fields.at(i).name
-        params = params + fname
-        ctor_body = ctor_body + "    this.${fname} = ${fname};\n"
-        i = i + 1
-    }
-
-    return "class ${node.name} {\n  constructor(${params}) {\n${ctor_body}  }\n}"
-}
-
-// === Enum → Tagged Union ===
-emit_enum = (node: meta.ASTNode) String {
-    result ::= "const ${node.name} = Object.freeze({\n"
-    variants = node.variants
-    i ::= 0
-    loop i < variants.len() {
-        v = variants.at(i)
-        v.payload ?
-            | null {
-                result = result + "  ${v.name}: Object.freeze({ tag: \"${v.name}\" }),\n"
-            }
-            | _ {
-                result = result + "  ${v.name}: (value) => Object.freeze({ tag: \"${v.name}\", value }),\n"
-            }
-        i = i + 1
-    }
-    return result + "});"
-}
-
-// === Binary Op ===
-emit_binary_op = (node: meta.ASTNode) String {
-    left = to_js(node.left)
-    right = to_js(node.right)
-    op = node.op ?
-        | "+" { "+" }
-        | "-" { "-" }
-        | "*" { "*" }
-        | "/" { "/" }
-        | "%" { "%" }
-        | "==" { "===" }
-        | "!=" { "!==" }
-        | "<" { "<" }
-        | ">" { ">" }
-        | "<=" { "<=" }
-        | ">=" { ">=" }
-        | "&&" { "&&" }
-        | "||" { "||" }
-        | _ { node.op }
-    return "(${left} ${op} ${right})"
-}
-
-// === Function Call ===
-emit_call = (node: meta.ASTNode) String {
-    name = node.name
-    args_str ::= ""
-    args = node.args
-    i ::= 0
-    loop i < args.len() {
-        i > 0 ? | true { args_str = args_str + ", " } | false {}
-        args_str = args_str + to_js(args.at(i))
-        i = i + 1
-    }
-
-    // Map Zen stdlib to JS
-    name ?
-        | "io.println" { return "console.log(${args_str})" }
-        | "io.print"   { return "process.stdout.write(${args_str})" }
-        | "cast"       { return args_str }
-        | _            { return "${name}(${args_str})" }
-}
-
-// === Method Call ===
-emit_method_call = (node: meta.ASTNode) String {
-    obj = to_js(node.object)
-    args_str ::= ""
-    args = node.args
-    i ::= 0
-    loop i < args.len() {
-        i > 0 ? | true { args_str = args_str + ", " } | false {}
-        args_str = args_str + to_js(args.at(i))
-        i = i + 1
-    }
-    return "${obj}.${node.method}(${args_str})"
-}
-
-// === Member Access ===
-emit_member_access = (node: meta.ASTNode) String {
-    return to_js(node.object) + ".${node.member}"
-}
-
-// === Array Literal ===
-emit_array = (node: meta.ASTNode) String {
-    result ::= "["
-    elements = node.elements
-    i ::= 0
-    loop i < elements.len() {
-        i > 0 ? | true { result = result + ", " } | false {}
-        result = result + to_js(elements.at(i))
-        i = i + 1
-    }
-    return result + "]"
-}
-
-// === Array Index ===
-emit_array_index = (node: meta.ASTNode) String {
-    return to_js(node.array) + "[" + to_js(node.index) + "]"
-}
-
-// === Struct Literal → Constructor ===
-emit_struct_literal = (node: meta.ASTNode) String {
-    result ::= "new ${node.name}("
-    fields = node.fields
-    i ::= 0
-    loop i < fields.len() {
-        i > 0 ? | true { result = result + ", " } | false {}
-        result = result + to_js(fields.at(i).value)
-        i = i + 1
-    }
-    return result + ")"
-}
-
-// === String Interpolation → Template Literal ===
-emit_template_literal = (node: meta.ASTNode) String {
-    result ::= "`"
-    parts = node.parts
-    i ::= 0
-    loop i < parts.len() {
-        part = parts.at(i)
-        part.variant_name() ?
-            | "Literal" { result = result + part.value }
-            | "Interpolation" { result = result + "${" + to_js(part.expr) + "}" }
-        i = i + 1
-    }
-    return result + "`"
-}
-
-// === Pattern Match → IIFE with if/else ===
-emit_match = (node: meta.ASTNode) String {
-    scrutinee = to_js(node.scrutinee)
-    result ::= "((__m) => {\n"
-    arms = node.arms
-    i ::= 0
-    loop i < arms.len() {
-        arm = arms.at(i)
-        cond = emit_pattern_cond("__m", arm.pattern)
-        body = to_js(arm.body)
-        i == 0 ?
-            | true  { result = result + "  if (${cond}) { return ${body}; }\n" }
-            | false { result = result + "  else if (${cond}) { return ${body}; }\n" }
-        i = i + 1
-    }
-    return result + "})(${scrutinee})"
-}
-
-emit_pattern_cond = (var: String, pattern: meta.ASTNode) String {
-    pattern.variant_name() ?
-        | "Wildcard"   { return "true" }
-        | "Literal"    { return "${var} === ${to_js(pattern.value)}" }
-        | "Identifier" { return "true" }
-        | "EnumLiteral" { return "${var}.tag === \"${pattern.variant}\"" }
-        | _            { return "true" }
-}
-
-// === Closure → Arrow Function ===
-emit_closure = (node: meta.ASTNode) String {
-    params = node.params
-    params_str ::= ""
-    i ::= 0
-    loop i < params.len() {
-        i > 0 ? | true { params_str = params_str + ", " } | false {}
-        params_str = params_str + params.at(i).name
-        i = i + 1
-    }
-    return "(${params_str}) => ${to_js(node.body)}"
-}
-
-// === Block → IIFE ===
-emit_block = (node: meta.ASTNode) String {
-    result ::= "(() => {\n"
-    stmts = node.statements
-    i ::= 0
-    loop i < stmts.len() {
-        result = result + "  " + emit_statement(stmts.at(i)) + "\n"
-        i = i + 1
-    }
-    return result + "})()"
-}
-
-// === Statement Emitter ===
-emit_statement = (node: meta.ASTNode) String {
     node.variant_name() ?
-        | "Expression"          { return to_js(node.expr) + ";" }
-        | "Return"              { return "return " + to_js(node.expr) + ";" }
-        | "VariableDeclaration" {
-            keyword = node.is_mutable ? | true { "let" } | false { "const" }
-            return "${keyword} ${node.name} = ${to_js(node.initializer)};"
-        }
-        | "VariableAssignment"  { return "${node.name} = ${to_js(node.value)};" }
-        | "Loop"                { return emit_loop(node) }
-        | "Break"               { return "break;" }
-        | "Continue"            { return "continue;" }
-        | _                     { return "/* ${node.variant_name()} */" }
-}
-
-emit_loop = (node: meta.ASTNode) String {
-    node.kind ?
-        | "Infinite"  { return "while (true) { ... }" }
-        | "Condition"  {
-            cond = to_js(node.condition)
-            body ::= ""
-            stmts = node.body
-            i ::= 0
-            loop i < stmts.len() {
-                body = body + "  " + emit_statement(stmts.at(i)) + "\n"
-                i = i + 1
-            }
-            return "while (${cond}) {\n${body}}"
-        }
+        | "Program"            { return emit_program(node) }
+        | "Function"           { return emit_function(node) }
+        | "Struct"             { return emit_struct(node) }
+        | "Enum"               { return emit_enum(node) }
+        | "Integer32"          { return "${node.value}" }
+        | "Integer64"          { return "${node.value}n" }
+        | "Float32"            { return "${node.value}" }
+        | "Float64"            { return "${node.value}" }
+        | "Boolean"            { return node.value ? | true { "true" } | false { "false" } }
+        | "String"             { return "\"${node.value}\"" }
+        | "Identifier"         { return node.name }
+        | "None"               { return "null" }
+        | "Some"               { return to_js(node.inner) }
+        | "BinaryOp"           { return emit_binary_op(node) }
+        | "FunctionCall"       { return emit_call(node) }
+        | "MethodCall"         { return emit_method_call(node) }
+        | "MemberAccess"       { return to_js(node.object) + ".${node.member}" }
+        | "ArrayLiteral"       { return emit_list(node.elements, "[", "]") }
+        | "ArrayIndex"         { return to_js(node.array) + "[" + to_js(node.index) + "]" }
+        | "StructLiteral"      { return "new ${node.name}(" + emit_list(node.fields, "", ")") }
+        | "StringInterpolation" { return emit_template_literal(node) }
+        | "QuestionMatch"      { return emit_match(node) }
+        | "Closure"            { return emit_closure(node) }
+        | "Block"              { return emit_block(node) }
+        | "Return"             { return "return " + to_js(node.expr) }
+        | "EnumLiteral"        { return "{ tag: \"${node.variant}\" }" }
+        | _                    { return "/* unsupported: ${node.variant_name()} */" }
 }

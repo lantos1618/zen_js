@@ -1,0 +1,68 @@
+// Statement emitters and shared helpers
+
+{ meta } = @std
+
+emit_statement = (node: meta.ASTNode) String {
+    node.variant_name() ?
+        | "Expression"          { return to_js(node.expr) + ";" }
+        | "Return"              { return "return " + to_js(node.expr) + ";" }
+        | "VariableDeclaration" {
+            keyword = node.is_mutable ? | true { "let" } | false { "const" }
+            return "${keyword} ${node.name} = ${to_js(node.initializer)};"
+        }
+        | "VariableAssignment"  { return "${node.name} = ${to_js(node.value)};" }
+        | "Loop"                { return emit_loop(node) }
+        | "Break"               { return "break;" }
+        | "Continue"            { return "continue;" }
+        | _                     { return "// ${node.variant_name()}" }
+}
+
+emit_loop = (node: meta.ASTNode) String {
+    node.kind ?
+        | "Infinite" {
+            body = emit_body(node.body, "  ")
+            return "while (true) {\n${body}}"
+        }
+        | "Condition" {
+            cond = to_js(node.condition)
+            body = emit_body(node.body, "  ")
+            return "while (${cond}) {\n${body}}"
+        }
+}
+
+// === Shared Helpers ===
+
+// Emit a list of statements as indented lines
+emit_body = (stmts: [meta.ASTNode], indent: String) String {
+    result ::= ""
+    i ::= 0
+    loop i < stmts.len() {
+        result = result + indent + emit_statement(stmts.at(i)) + "\n"
+        i = i + 1
+    }
+    return result
+}
+
+// Emit comma-separated function args
+emit_args = (args: [meta.ASTNode]) String {
+    result ::= ""
+    i ::= 0
+    loop i < args.len() {
+        i > 0 ? | true { result = result + ", " } | false {}
+        result = result + to_js(args.at(i))
+        i = i + 1
+    }
+    return result
+}
+
+// Emit comma-separated names (for params, fields)
+emit_joined = (nodes: [meta.ASTNode], sep: String) String {
+    result ::= ""
+    i ::= 0
+    loop i < nodes.len() {
+        i > 0 ? | true { result = result + sep } | false {}
+        result = result + nodes.at(i).name
+        i = i + 1
+    }
+    return result
+}

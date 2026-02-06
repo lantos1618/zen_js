@@ -1,0 +1,104 @@
+// Browser API types for Zen → JavaScript
+
+// === Document & Window ===
+
+Document: {
+    title: String,
+    readyState: String,
+    URL: String,
+    domain: String,
+    referrer: String,
+}
+
+Window: {
+    innerWidth: f64,
+    innerHeight: f64,
+    outerWidth: f64,
+    outerHeight: f64,
+    scrollX: f64,
+    scrollY: f64,
+    devicePixelRatio: f64,
+}
+
+Location: {
+    href: String,
+    protocol: String,
+    host: String,
+    hostname: String,
+    port: String,
+    pathname: String,
+    search: String,
+    hash: String,
+    origin: String,
+}
+
+Navigator: {
+    userAgent: String,
+    language: String,
+    platform: String,
+    onLine: bool,
+    cookieEnabled: bool,
+}
+
+Storage: {
+    length: i32,
+}
+
+// === Fetch ===
+
+RequestMethod: GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+
+Request: {
+    url: String,
+    method: String,
+}
+
+Response: {
+    ok: bool,
+    status: i32,
+    statusText: String,
+    url: String,
+    redirected: bool,
+}
+
+Headers: {
+    _ref: u64,
+}
+
+// === Canvas ===
+
+CanvasRenderingContext2D: {
+    fillStyle: String,
+    strokeStyle: String,
+    lineWidth: f64,
+    font: String,
+    textAlign: String,
+    textBaseline: String,
+    globalAlpha: f64,
+    shadowBlur: f64,
+    shadowColor: String,
+}
+
+// === WebSocket ===
+
+WebSocketReadyState: CONNECTING, OPEN, CLOSING, CLOSED
+
+WebSocket: {
+    url: String,
+    readyState: i32,
+    protocol: String,
+    bufferedAmount: u64,
+}
+
+// === Geometry ===
+
+DOMRect: {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    top: f64,
+    right: f64,
+    bottom: f64,
+    left: f64,
+}
