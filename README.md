@@ -124,10 +124,10 @@ format_todo = (id: i32, text: String, done: bool, priority: Priority) String {
 
 ## JS DOM Type Definitions
 
-The `stdlib/js/` directory contains Zen type definitions for browser APIs:
+`src/` includes Zen type definitions for browser APIs:
 
-- **`types.zen`** — Core JS types: `JsValue`, `Promise`, `Map`, `Set`, `JSON`
-- **`dom.zen`** — Full DOM API: `HTMLElement`, `Document`, `Event`, `Window`, `CSSStyleDeclaration`, Canvas, Fetch, WebSocket
+- **`js_types.zen`** — Core JS types: `JsValue`, `Promise`, `Map`, `Set`, `JSON`
+- **`js_dom.zen`** — Full DOM API: `HTMLElement`, `Document`, `Event`, `Window`, `CSSStyleDeclaration`, Canvas, Fetch, WebSocket
 
 These define the type surface that Zen programs targeting JS can use.
 
