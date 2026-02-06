@@ -1,41 +1,47 @@
 # zen-js
 
-Zen to JavaScript transpiler — powered by Zen's AST introspection and meta-programming system.
+Zen to JavaScript transpiler — written in Zen using compile-time AST introspection.
 
-Parses `.zen` source files using the Zen compiler frontend and emits clean, readable JavaScript that runs in Node.js or the browser.
+The transpiler walks the Zen AST at comptime and emits JavaScript. No external tooling, no Rust glue — just Zen meta-programming.
 
-## What it does
+## How it works
 
+```zen
+to_js = comptime (source: String) String {
+    ast = meta.parse(source)
+    output ::= ""
+    nodes = ast.children()
+    // walk AST nodes, emit JS for each
+}
 ```
-┌──────────┐     ┌────────────┐     ┌────────────┐     ┌──────────┐
-│ .zen file │ ──▶ │ Zen Lexer  │ ──▶ │ Zen Parser │ ──▶ │ JS Emit  │
-│           │     │            │     │   (AST)    │     │          │
-└──────────┘     └────────────┘     └────────────┘     └──────────┘
-```
 
-The emitter walks the Zen AST and produces JavaScript:
+Zen's `comptime` + `meta.parse()` gives full AST access at compile time. The transpiler pattern-matches on AST node types and emits the corresponding JavaScript.
 
-| Zen construct | JavaScript output |
+## Zen → JavaScript mapping
+
+| Zen | JavaScript |
 |---|---|
 | `Name: { x: i32, y: f64 }` | `class Name { constructor(x, y) { ... } }` |
-| `Color: Red, Green, Blue` | `const Color = Object.freeze({ Red: ..., Green: ... })` |
-| `x ? \| .Red { "r" } \| .Blue { "b" }` | IIFE with if/else chain |
+| `Color: Red, Green, Blue` | `const Color = Object.freeze({ Red: ..., ... })` |
+| `x ? \| .Red { "r" } \| .Blue { "b" }` | if/else chain |
 | `io.println("hi")` | `console.log("hi")` |
 | `"Hello ${name}"` | `` `Hello ${name}` `` |
 | `count ::= 0` | `let count = 0` |
 | `x = 5` | `const x = 5` |
 
-## Usage
+## Project structure
 
-```bash
-# Transpile to stdout
-zen-js examples/fibonacci.zen
-
-# Pipe to Node.js
-zen-js examples/counter.zen | node
-
-# Write .js file
-zen-js examples/hello.zen -o
+```
+src/
+  to_js.zen       # The transpiler — walks AST, emits JS
+  js_types.zen    # Core JS type definitions (JsValue, Promise, Error, ...)
+  js_dom.zen      # DOM API types (HTMLElement, Document, Event, Canvas, ...)
+examples/
+  hello.zen       # Hello world
+  fibonacci.zen   # Recursion + pattern matching
+  counter.zen     # Enums + mutable state
+  todo_app.zen    # Multi-function composition
+  fetch_api.zen   # Structs + string interpolation
 ```
 
 ## Examples
@@ -55,27 +61,6 @@ main = () i32 {
     io.println("fib(10) = ${fibonacci(10)}")
     return 0
 }
-```
-
-Transpiles to:
-
-```javascript
-function fibonacci(n) {
-  return ((__match) => {
-    if (__match === true) {
-      return (() => { return n; })();
-    } else if (__match === false) {
-      return (() => { return (fibonacci((n - 1)) + fibonacci((n - 2))); })();
-    }
-  })((n <= 1));
-}
-
-function main() {
-  console.log(`fib(10) = ${fibonacci(10)}`);
-  return 0;
-}
-
-main();
 ```
 
 ### counter.zen (enums + pattern matching)
@@ -126,44 +111,16 @@ format_todo = (id: i32, text: String, done: bool, priority: Priority) String {
 
 `src/` includes Zen type definitions for browser APIs:
 
-- **`js_types.zen`** — Core JS types: `JsValue`, `Promise`, `Map`, `Set`, `JSON`
+- **`js_types.zen`** — Core JS types: `JsValue`, `Promise`, `Map`, `Set`
 - **`js_dom.zen`** — Full DOM API: `HTMLElement`, `Document`, `Event`, `Window`, `CSSStyleDeclaration`, Canvas, Fetch, WebSocket
 
-These define the type surface that Zen programs targeting JS can use.
+## Requirements
 
-## The Vision: `spec/to_js.zen`
-
-The `spec/to_js.zen` file shows how this transpiler will eventually be written *in Zen itself* using compile-time meta-programming:
-
-```zen
-to_js = comptime (source: String) String {
-    ast = meta.parse(source)
-    output ::= ""
-    nodes = ast.children()
-    // ... walk AST and emit JS at compile time
-}
-```
-
-When Zen's comptime system is complete, the Rust emitter becomes unnecessary — the transpiler becomes a Zen program that walks its own AST.
-
-## Building
-
-Requires the [Zen compiler](https://github.com/lantos1618/zenlang) as a sibling directory:
+Requires the [Zen compiler](https://github.com/lantos1618/zenlang):
 
 ```bash
-git clone https://github.com/lantos1618/zenlang.git
-git clone https://github.com/lantos1618/zen_js.git
-cd zen_js
-cargo build --release
+zen run src/to_js.zen -- examples/fibonacci.zen
 ```
-
-## Tests
-
-```bash
-cargo test
-```
-
-17 integration tests covering: function declarations, enums, structs, pattern matching, string interpolation, variable scoping, IO mappings, and full example transpilation.
 
 ## License
 
