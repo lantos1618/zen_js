@@ -1,0 +1,9 @@
+// Hello World in Zen → transpiles to JavaScript
+
+{ io } = @std
+
+main = () i32 {
+    io.println("Hello from Zen!")
+    io.println("This was transpiled to JavaScript.")
+    return 0
+}

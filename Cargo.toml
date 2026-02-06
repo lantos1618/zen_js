@@ -1,0 +1,18 @@
+[package]
+name = "zen-js"
+version = "0.1.0"
+edition = "2021"
+description = "Zen to JavaScript transpiler - powered by Zen's meta/AST introspection"
+
+[lib]
+name = "zen_js"
+path = "src/lib.rs"
+
+[[bin]]
+name = "zen-js"
+path = "src/main.rs"
+
+[dependencies]
+zen = { path = "../zenlang" }
+
+[dev-dependencies]

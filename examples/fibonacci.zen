@@ -1,0 +1,26 @@
+// Fibonacci in Zen → transpiles to JavaScript
+// Shows: functions, recursion, pattern matching, string interpolation
+
+{ io } = @std
+
+fibonacci = (n: i32) i32 {
+    n <= 1 ?
+        | true { return n }
+        | false { return fibonacci(n - 1) + fibonacci(n - 2) }
+}
+
+main = () i32 {
+    io.println("Fibonacci sequence:")
+    io.println("  fib(0) = ${fibonacci(0)}")
+    io.println("  fib(1) = ${fibonacci(1)}")
+    io.println("  fib(2) = ${fibonacci(2)}")
+    io.println("  fib(3) = ${fibonacci(3)}")
+    io.println("  fib(4) = ${fibonacci(4)}")
+    io.println("  fib(5) = ${fibonacci(5)}")
+    io.println("  fib(6) = ${fibonacci(6)}")
+    io.println("  fib(7) = ${fibonacci(7)}")
+    io.println("  fib(8) = ${fibonacci(8)}")
+    io.println("  fib(9) = ${fibonacci(9)}")
+    io.println("  fib(10) = ${fibonacci(10)}")
+    return 0
+}

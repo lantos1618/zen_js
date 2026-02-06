@@ -1,0 +1,326 @@
+// DOM API type definitions for Zen → JavaScript
+// These types model the browser DOM API in Zen's type system.
+// When transpiled to JS, type annotations compile away but provide
+// safety and autocompletion during Zen development.
+
+// === Core DOM Types ===
+
+EventTarget: {
+    _ref: u64,
+}
+
+Node: {
+    nodeType: i32,
+    nodeName: String,
+    textContent: String,
+}
+
+Element: {
+    tagName: String,
+    id: String,
+    className: String,
+    innerHTML: String,
+    outerHTML: String,
+    textContent: String,
+}
+
+HTMLElement: {
+    tagName: String,
+    id: String,
+    className: String,
+    innerHTML: String,
+    textContent: String,
+    hidden: bool,
+    tabIndex: i32,
+    title: String,
+    offsetWidth: f64,
+    offsetHeight: f64,
+    offsetTop: f64,
+    offsetLeft: f64,
+}
+
+// === Specialized HTML Elements ===
+
+HTMLInputElement: {
+    value: String,
+    checked: bool,
+    disabled: bool,
+    placeholder: String,
+    name: String,
+}
+
+HTMLButtonElement: {
+    disabled: bool,
+    textContent: String,
+    name: String,
+}
+
+HTMLCanvasElement: {
+    width: i32,
+    height: i32,
+}
+
+HTMLImageElement: {
+    src: String,
+    alt: String,
+    width: i32,
+    height: i32,
+    naturalWidth: i32,
+    naturalHeight: i32,
+}
+
+HTMLFormElement: {
+    action: String,
+    method: String,
+}
+
+HTMLSelectElement: {
+    value: String,
+    selectedIndex: i32,
+    disabled: bool,
+}
+
+HTMLTextAreaElement: {
+    value: String,
+    rows: i32,
+    cols: i32,
+    placeholder: String,
+    disabled: bool,
+}
+
+HTMLAnchorElement: {
+    href: String,
+    target: String,
+    rel: String,
+    textContent: String,
+}
+
+// === CSS ===
+
+CSSStyleDeclaration: {
+    color: String,
+    backgroundColor: String,
+    fontSize: String,
+    fontWeight: String,
+    fontFamily: String,
+    margin: String,
+    padding: String,
+    border: String,
+    borderRadius: String,
+    width: String,
+    height: String,
+    display: String,
+    position: String,
+    top: String,
+    left: String,
+    right: String,
+    bottom: String,
+    opacity: String,
+    transform: String,
+    transition: String,
+    zIndex: String,
+    overflow: String,
+    cursor: String,
+    textAlign: String,
+    lineHeight: String,
+    boxShadow: String,
+    flexDirection: String,
+    justifyContent: String,
+    alignItems: String,
+    gap: String,
+    gridTemplateColumns: String,
+    gridTemplateRows: String,
+}
+
+DOMTokenList: {
+    length: i32,
+}
+
+DOMStringMap: {
+    _ref: u64,
+}
+
+// === Events ===
+
+EventPhase: NONE, CAPTURING, AT_TARGET, BUBBLING
+
+Event: {
+    eventType: String,
+    bubbles: bool,
+    cancelable: bool,
+    defaultPrevented: bool,
+    timeStamp: f64,
+}
+
+MouseEvent: {
+    eventType: String,
+    clientX: f64,
+    clientY: f64,
+    pageX: f64,
+    pageY: f64,
+    screenX: f64,
+    screenY: f64,
+    button: i32,
+    buttons: i32,
+    altKey: bool,
+    ctrlKey: bool,
+    metaKey: bool,
+    shiftKey: bool,
+}
+
+KeyboardEvent: {
+    eventType: String,
+    key: String,
+    code: String,
+    altKey: bool,
+    ctrlKey: bool,
+    metaKey: bool,
+    shiftKey: bool,
+    repeat: bool,
+}
+
+InputEvent: {
+    eventType: String,
+    data: String,
+    inputType: String,
+    isComposing: bool,
+}
+
+FocusEvent: {
+    eventType: String,
+}
+
+TouchEvent: {
+    eventType: String,
+    altKey: bool,
+    ctrlKey: bool,
+    metaKey: bool,
+    shiftKey: bool,
+}
+
+WheelEvent: {
+    eventType: String,
+    deltaX: f64,
+    deltaY: f64,
+    deltaZ: f64,
+    deltaMode: i32,
+}
+
+// === Document & Window ===
+
+Document: {
+    title: String,
+    readyState: String,
+    URL: String,
+    domain: String,
+    referrer: String,
+}
+
+// Document methods map directly to JS:
+//   document.getElementById(id)      → document.getElementById(id)
+//   document.createElement(tag)      → document.createElement(tag)
+//   document.querySelector(sel)      → document.querySelector(sel)
+//   document.querySelectorAll(sel)   → document.querySelectorAll(sel)
+
+Window: {
+    innerWidth: f64,
+    innerHeight: f64,
+    outerWidth: f64,
+    outerHeight: f64,
+    scrollX: f64,
+    scrollY: f64,
+    devicePixelRatio: f64,
+}
+
+Location: {
+    href: String,
+    protocol: String,
+    host: String,
+    hostname: String,
+    port: String,
+    pathname: String,
+    search: String,
+    hash: String,
+    origin: String,
+}
+
+Navigator: {
+    userAgent: String,
+    language: String,
+    platform: String,
+    onLine: bool,
+    cookieEnabled: bool,
+}
+
+Storage: {
+    length: i32,
+}
+
+// === Fetch API ===
+
+RequestMethod: GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+
+Request: {
+    url: String,
+    method: String,
+}
+
+Response: {
+    ok: bool,
+    status: i32,
+    statusText: String,
+    url: String,
+    redirected: bool,
+}
+
+Headers: {
+    _ref: u64,
+}
+
+// === Canvas ===
+
+CanvasRenderingContext2D: {
+    fillStyle: String,
+    strokeStyle: String,
+    lineWidth: f64,
+    lineCap: String,
+    lineJoin: String,
+    font: String,
+    textAlign: String,
+    textBaseline: String,
+    globalAlpha: f64,
+    globalCompositeOperation: String,
+    shadowBlur: f64,
+    shadowColor: String,
+    shadowOffsetX: f64,
+    shadowOffsetY: f64,
+}
+
+// === WebSocket ===
+
+WebSocketReadyState: CONNECTING, OPEN, CLOSING, CLOSED
+
+WebSocket: {
+    url: String,
+    readyState: i32,
+    protocol: String,
+    bufferedAmount: u64,
+}
+
+// === Geometry ===
+
+DOMRect: {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    top: f64,
+    right: f64,
+    bottom: f64,
+    left: f64,
+}
+
+IntersectionObserverEntry: {
+    intersectionRatio: f64,
+    isIntersecting: bool,
+}

@@ -1,0 +1,26 @@
+// HTTP API example in Zen → transpiles to JavaScript
+// Shows: structs, functions, string interpolation
+
+{ io } = @std
+
+User: {
+    id: i32,
+    name: String,
+    email: String,
+}
+
+format_user = (id: i32, name: String, email: String) String {
+    return "User #${id}: ${name} <${email}>"
+}
+
+main = () i32 {
+    io.println("=== Zen Fetch API Demo ===")
+    io.println("")
+    io.println("Users from API:")
+    io.println(format_user(1, "Alice",   "alice@example.com"))
+    io.println(format_user(2, "Bob",     "bob@example.com"))
+    io.println(format_user(3, "Charlie", "charlie@example.com"))
+    io.println("")
+    io.println("3 users loaded")
+    return 0
+}

@@ -1,0 +1,64 @@
+// Core JavaScript type mappings for Zen
+// These types represent the JS runtime type system in Zen's type system.
+// When transpiled, these compile away - they exist for type safety during development.
+
+// === Primitive Types ===
+// JS number (f64 internally) - maps to Zen's f64
+// JS bigint - maps to Zen's i64/u64
+// JS boolean - maps to Zen's bool
+// JS string - maps to Zen's String
+// JS undefined - maps to Zen's void
+// JS null - maps to Zen's null / Option.None
+
+// === JS Object ===
+JsValue: Undefined, Null, Boolean, Number, BigInt, Str, Object, Array, Function
+
+JsObject: {
+    _ref: u64,
+}
+
+JsArray: {
+    _ref: u64,
+}
+
+JsFunction: {
+    _ref: u64,
+}
+
+// === Promise ===
+Promise: {
+    _ref: u64,
+}
+
+// === JS Error types ===
+JsError: {
+    message: String,
+    name: String,
+    stack: String,
+}
+
+TypeError: {
+    message: String,
+}
+
+RangeError: {
+    message: String,
+}
+
+// === Timer types ===
+Timeout: {
+    _id: i32,
+}
+
+Interval: {
+    _id: i32,
+}
+
+// === Console ===
+// Maps to console.log, console.error, etc. via io.println → console.log
+
+// === Math ===
+// Maps to Math.floor, Math.ceil, etc. via method call passthrough
+
+// === Map / Set ===
+// Generic types - Map(K, V) and Set(T) map directly to JS Map/Set
